@@ -1,12 +1,16 @@
 package com.mediconnect.service;
 
+import com.mediconnect.dto.UserCreateRequest;
 import com.mediconnect.entity.Role;
 import com.mediconnect.entity.User;
+import com.mediconnect.exception.ResourceNotFoundException;
 import com.mediconnect.repository.RoleRepository;
 import com.mediconnect.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -40,34 +44,49 @@ public class UserService {
     }
 
     @Transactional
-    public User createUser(User user) {
-        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+    public User createUser(UserCreateRequest request) {
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setEmail(request.getEmail());
+        user.setEmployeeId(request.getEmployeeId());
         user.setIsActive(true);
-        user.setNeedsPasswordUpdate(true); // New users should update their password
+        user.setNeedsPasswordUpdate(true);
         user.setCreatedOn(LocalDateTime.now());
-        // createdBy should be set from authenticated user context
         return userRepository.save(user);
     }
 
     @Transactional
     public User updateUser(Long id, User userDetails) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
         user.setUsername(userDetails.getUsername());
         user.setEmail(userDetails.getEmail());
         user.setIsActive(userDetails.getIsActive());
         user.setNeedsPasswordUpdate(userDetails.getNeedsPasswordUpdate());
         user.setModifiedOn(LocalDateTime.now());
-        // modifiedBy should be set from authenticated user context
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password is incorrect");
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setNeedsPasswordUpdate(false);
+        user.setModifiedOn(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-        user.setIsActive(false); // Soft delete
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        user.setIsActive(false);
         user.setModifiedOn(LocalDateTime.now());
         userRepository.save(user);
     }
@@ -75,13 +94,10 @@ public class UserService {
     @Transactional
     public User assignRolesToUser(Long userId, List<Long> roleIds) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
         user.setRoles(roles);
         user.setModifiedOn(LocalDateTime.now());
         return userRepository.save(user);
     }
-
-    // TODO: Implement password change/reset logic here as well, possibly in AuthService
 }

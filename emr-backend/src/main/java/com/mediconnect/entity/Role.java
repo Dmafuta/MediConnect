@@ -1,9 +1,7 @@
 package com.mediconnect.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -11,14 +9,18 @@ import java.util.Set;
 
 @Entity
 @Table(name = "rbac_role")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"permissions", "application", "defaultRoute"})
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "role_id")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "role_name", unique = true, nullable = false)

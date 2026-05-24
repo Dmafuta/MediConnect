@@ -2,6 +2,7 @@ package com.mediconnect.service;
 
 import com.mediconnect.entity.Permission;
 import com.mediconnect.entity.Role;
+import com.mediconnect.exception.ResourceNotFoundException;
 import com.mediconnect.repository.PermissionRepository;
 import com.mediconnect.repository.RoleRepository;
 import org.springframework.stereotype.Service;
@@ -40,14 +41,13 @@ public class RoleService {
     public Role createRole(Role role) {
         role.setIsActive(true);
         role.setCreatedOn(LocalDateTime.now());
-        // createdBy should be set from authenticated user context
         return roleRepository.save(role);
     }
 
     @Transactional
     public Role updateRole(Long id, Role roleDetails) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Role not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + id));
 
         role.setRoleName(roleDetails.getRoleName());
         role.setRoleDescription(roleDetails.getRoleDescription());
@@ -56,15 +56,14 @@ public class RoleService {
         role.setIsActive(roleDetails.getIsActive());
         role.setRolePriority(roleDetails.getRolePriority());
         role.setModifiedOn(LocalDateTime.now());
-        // modifiedBy should be set from authenticated user context
         return roleRepository.save(role);
     }
 
     @Transactional
     public void deleteRole(Long id) {
         Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Role not found with id: " + id));
-        role.setIsActive(false); // Soft delete
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + id));
+        role.setIsActive(false);
         role.setModifiedOn(LocalDateTime.now());
         roleRepository.save(role);
     }
@@ -72,8 +71,7 @@ public class RoleService {
     @Transactional
     public Role assignPermissionsToRole(Long roleId, List<Long> permissionIds) {
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId));
-
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
         Set<Permission> permissions = new HashSet<>(permissionRepository.findAllById(permissionIds));
         role.setPermissions(permissions);
         role.setModifiedOn(LocalDateTime.now());

@@ -2,6 +2,7 @@ package com.mediconnect.service;
 
 import com.mediconnect.entity.Application;
 import com.mediconnect.entity.Permission;
+import com.mediconnect.exception.ResourceNotFoundException;
 import com.mediconnect.repository.ApplicationRepository;
 import com.mediconnect.repository.PermissionRepository;
 import org.springframework.stereotype.Service;
@@ -36,32 +37,27 @@ public class PermissionService {
 
     @Transactional
     public Permission createPermission(Permission permission) {
-        // Ensure the application exists
         Application application = applicationRepository.findById(permission.getApplication().getId())
-                .orElseThrow(() -> new RuntimeException("Application not found with id: " + permission.getApplication().getId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + permission.getApplication().getId()));
         permission.setApplication(application);
-
         permission.setIsActive(true);
         permission.setCreatedOn(LocalDateTime.now());
-        // createdBy should be set from authenticated user context
         return permissionRepository.save(permission);
     }
 
     @Transactional
     public Permission updatePermission(Long id, Permission permissionDetails) {
         Permission permission = permissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Permission not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Permission not found with id: " + id));
 
         permission.setPermissionName(permissionDetails.getPermissionName());
         permission.setDescription(permissionDetails.getDescription());
         permission.setIsActive(permissionDetails.getIsActive());
         permission.setModifiedOn(LocalDateTime.now());
-        // modifiedBy should be set from authenticated user context
 
-        // Update application if provided
         if (permissionDetails.getApplication() != null && permissionDetails.getApplication().getId() != null) {
             Application application = applicationRepository.findById(permissionDetails.getApplication().getId())
-                    .orElseThrow(() -> new RuntimeException("Application not found with id: " + permissionDetails.getApplication().getId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + permissionDetails.getApplication().getId()));
             permission.setApplication(application);
         }
         return permissionRepository.save(permission);
@@ -70,8 +66,8 @@ public class PermissionService {
     @Transactional
     public void deletePermission(Long id) {
         Permission permission = permissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Permission not found with id: " + id));
-        permission.setIsActive(false); // Soft delete
+                .orElseThrow(() -> new ResourceNotFoundException("Permission not found with id: " + id));
+        permission.setIsActive(false);
         permission.setModifiedOn(LocalDateTime.now());
         permissionRepository.save(permission);
     }

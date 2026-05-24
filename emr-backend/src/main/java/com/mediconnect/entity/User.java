@@ -1,9 +1,8 @@
 package com.mediconnect.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -11,24 +10,29 @@ import java.util.Set;
 
 @Entity
 @Table(name = "rbac_user")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"roles", "landingPageRoute"})
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "employee_id")
-    private Long employeeId; // Foreign Key to Employee entity (not yet created)
+    private Long employeeId;
 
     @Column(name = "user_name", unique = true, nullable = false)
     private String username;
 
+    @JsonIgnore
     @Column(name = "password", nullable = false)
-    private String passwordHash; // Stores hashed password
+    private String passwordHash;
 
     @Column(name = "email")
     private String email;

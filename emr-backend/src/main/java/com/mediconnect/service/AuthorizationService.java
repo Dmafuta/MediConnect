@@ -1,15 +1,14 @@
 package com.mediconnect.service;
 
-import com.mediconnect.entity.Permission;
 import com.mediconnect.entity.Route;
 import com.mediconnect.entity.User;
+import com.mediconnect.exception.ResourceNotFoundException;
 import com.mediconnect.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,13 +26,13 @@ public class AuthorizationService {
     @Transactional(readOnly = true)
     public Set<String> getUserPermissions(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         Set<String> permissions = new HashSet<>();
         user.getRoles().forEach(role -> {
-            if (role.getIsActive()) {
+            if (Boolean.TRUE.equals(role.getIsActive())) {
                 role.getPermissions().forEach(permission -> {
-                    if (permission.getIsActive()) {
+                    if (Boolean.TRUE.equals(permission.getIsActive())) {
                         permissions.add(permission.getPermissionName());
                     }
                 });
@@ -49,22 +48,20 @@ public class AuthorizationService {
 
     @Transactional(readOnly = true)
     public List<Route> getUserAccessibleRoutes(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         Set<String> userPermissionNames = getUserPermissions(userId);
 
-        // Get all active routes
         List<Route> allRoutes = routeService.findAllRoutes().stream()
-                .filter(Route::getIsActive)
+                .filter(route -> Boolean.TRUE.equals(route.getIsActive()))
                 .collect(Collectors.toList());
 
-        // Filter routes based on user's permissions
         List<Route> accessibleRoutes = allRoutes.stream()
-                .filter(route -> route.getPermission() == null || userPermissionNames.contains(route.getPermission().getPermissionName()))
+                .filter(route -> route.getPermission() == null
+                        || userPermissionNames.contains(route.getPermission().getPermissionName()))
                 .collect(Collectors.toList());
 
-        // Build hierarchy for accessible routes
         List<Route> rootAccessibleRoutes = accessibleRoutes.stream()
                 .filter(route -> route.getParentRoute() == null)
                 .collect(Collectors.toList());
@@ -76,7 +73,8 @@ public class AuthorizationService {
 
     private void buildAccessibleRouteHierarchy(Route currentRoute, List<Route> allAccessibleRoutes) {
         List<Route> childRoutes = allAccessibleRoutes.stream()
-                .filter(route -> route.getParentRoute() != null && route.getParentRoute().getId().equals(currentRoute.getId()))
+                .filter(route -> route.getParentRoute() != null
+                        && route.getParentRoute().getId().equals(currentRoute.getId()))
                 .collect(Collectors.toList());
 
         if (!childRoutes.isEmpty()) {

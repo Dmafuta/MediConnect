@@ -1,23 +1,26 @@
 package com.mediconnect.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "rbac_route_config")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"childRoutes", "parentRoute", "permission"})
 public class Route {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "route_id")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "url_full_path")
@@ -32,6 +35,7 @@ public class Route {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_route_id")
+    @JsonBackReference("route-children")
     private Route parentRoute;
 
     @Column(name = "default_show")
@@ -52,7 +56,7 @@ public class Route {
     @Column(name = "display_seq")
     private Integer displaySeq;
 
-    // Self-referencing relationship for child routes
-    @OneToMany(mappedBy = "parentRoute", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "parentRoute", cascade = CascadeType.ALL)
+    @JsonManagedReference("route-children")
     private List<Route> childRoutes;
 }

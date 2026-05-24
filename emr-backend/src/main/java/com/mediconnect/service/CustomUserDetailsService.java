@@ -37,12 +37,15 @@ public class CustomUserDetailsService implements UserDetailsService {
                 true, // credentialsNonExpired
                 true, // accountNonLocked
                 user.getRoles().stream()
+                        .filter(role -> Boolean.TRUE.equals(role.getIsActive()))
                         .flatMap(role -> {
                             Set<SimpleGrantedAuthority> authorities = new HashSet<>();
                             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
-                            role.getPermissions().forEach(permission ->
-                                authorities.add(new SimpleGrantedAuthority(permission.getPermissionName()))
-                            );
+                            role.getPermissions().stream()
+                                .filter(permission -> Boolean.TRUE.equals(permission.getIsActive()))
+                                .forEach(permission ->
+                                    authorities.add(new SimpleGrantedAuthority(permission.getPermissionName()))
+                                );
                             return authorities.stream();
                         })
                         .collect(Collectors.toSet())

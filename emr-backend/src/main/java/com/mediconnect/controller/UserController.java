@@ -1,7 +1,10 @@
 package com.mediconnect.controller;
 
+import com.mediconnect.dto.UserChangePasswordRequest;
+import com.mediconnect.dto.UserCreateRequest;
 import com.mediconnect.entity.User;
 import com.mediconnect.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -35,14 +38,21 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('create_user') or hasRole('ADMIN')")
-    public User createUser(@RequestBody User user) {
-        return userService.createUser(user);
+    public User createUser(@Valid @RequestBody UserCreateRequest request) {
+        return userService.createUser(request);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('update_user') or hasRole('ADMIN')")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
         return ResponseEntity.ok(userService.updateUser(id, userDetails));
+    }
+
+    @PutMapping("/{id}/password")
+    @PreAuthorize("hasAuthority('update_user') or hasRole('ADMIN')")
+    public ResponseEntity<Void> changePassword(@PathVariable Long id, @Valid @RequestBody UserChangePasswordRequest request) {
+        userService.changePassword(id, request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")

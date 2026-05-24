@@ -1,6 +1,7 @@
 package com.mediconnect.service;
 
 import com.mediconnect.entity.Application;
+import com.mediconnect.exception.ResourceNotFoundException;
 import com.mediconnect.repository.ApplicationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,29 +35,27 @@ public class ApplicationService {
     public Application createApplication(Application application) {
         application.setIsActive(true);
         application.setCreatedOn(LocalDateTime.now());
-        // createdBy should be set from authenticated user context
         return applicationRepository.save(application);
     }
 
     @Transactional
     public Application updateApplication(Long id, Application applicationDetails) {
         Application application = applicationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + id));
 
         application.setApplicationCode(applicationDetails.getApplicationCode());
         application.setApplicationName(applicationDetails.getApplicationName());
         application.setDescription(applicationDetails.getDescription());
         application.setIsActive(applicationDetails.getIsActive());
         application.setModifiedOn(LocalDateTime.now());
-        // modifiedBy should be set from authenticated user context
         return applicationRepository.save(application);
     }
 
     @Transactional
     public void deleteApplication(Long id) {
         Application application = applicationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
-        application.setIsActive(false); // Soft delete
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + id));
+        application.setIsActive(false);
         application.setModifiedOn(LocalDateTime.now());
         applicationRepository.save(application);
     }

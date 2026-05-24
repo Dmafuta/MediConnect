@@ -1,10 +1,10 @@
-package com.mediconnect.emr_backend;
+package com.mediconnect;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class EmrBackendApplicationTests {
+class MediConnectApplicationTests {
 
 	@Test
 	void contextLoads() {
