@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +36,10 @@ public class UserService {
 
     public List<User> findAllUsers() {
         return userRepository.findByIsActiveTrue();
+    }
+
+    public Page<User> findAllUsers(Pageable pageable) {
+        return userRepository.findByIsActiveTrue(pageable);
     }
 
     public Optional<User> findUserById(Long id) {

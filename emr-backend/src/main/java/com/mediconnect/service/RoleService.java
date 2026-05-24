@@ -8,14 +8,15 @@ import com.mediconnect.repository.RoleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class RoleService {
@@ -28,8 +29,8 @@ public class RoleService {
         this.permissionRepository = permissionRepository;
     }
 
-    public List<Role> findAllRoles() {
-        return roleRepository.findAll();
+    public Page<Role> findAllRoles(Pageable pageable) {
+        return roleRepository.findAll(pageable);
     }
 
     public Optional<Role> findRoleById(Long id) {

@@ -6,6 +6,9 @@ import com.mediconnect.repository.ApplicationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -19,8 +22,8 @@ public class ApplicationService {
         this.applicationRepository = applicationRepository;
     }
 
-    public List<Application> findAllApplications() {
-        return applicationRepository.findAll();
+    public Page<Application> findAllApplications(Pageable pageable) {
+        return applicationRepository.findAll(pageable);
     }
 
     public Optional<Application> findApplicationById(Long id) {

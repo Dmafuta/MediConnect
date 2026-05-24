@@ -6,6 +6,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+
 import java.util.List;
 
 @RestController
@@ -20,8 +24,8 @@ public class RouteController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('view_routes') or hasRole('System Admin')")
-    public List<Route> getAllRoutes() {
-        return routeService.findAllRoutes();
+    public Page<Route> getAllRoutes(@PageableDefault(size = 15) Pageable pageable) {
+        return routeService.findAllRoutes(pageable);
     }
 
     @GetMapping("/hierarchy")
