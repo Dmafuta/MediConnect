@@ -32,7 +32,7 @@ public class UserService {
     }
 
     public List<User> findAllUsers() {
-        return userRepository.findAll();
+        return userRepository.findByIsActiveTrue();
     }
 
     public Optional<User> findUserById(Long id) {
