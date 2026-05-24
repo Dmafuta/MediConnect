@@ -21,14 +21,17 @@ public class VisitController {
     private final VitalsService vitalsService;
     private final DiagnosisService diagnosisService;
     private final MedicationPrescriptionService prescriptionService;
+    private final ClinicalNoteService noteService;
 
     public VisitController(VisitService visitService, VitalsService vitalsService,
                             DiagnosisService diagnosisService,
-                            MedicationPrescriptionService prescriptionService) {
+                            MedicationPrescriptionService prescriptionService,
+                            ClinicalNoteService noteService) {
         this.visitService = visitService;
         this.vitalsService = vitalsService;
         this.diagnosisService = diagnosisService;
         this.prescriptionService = prescriptionService;
+        this.noteService = noteService;
     }
 
     // ── Visit CRUD ──────────────────────────────────────────────
@@ -145,5 +148,40 @@ public class VisitController {
                                                    @Valid @RequestBody MedicationPrescriptionRequest request) {
         request.setVisitId(id);
         return prescriptionService.create(request);
+    }
+
+    // ── Clinical Notes (SOAP) ───────────────────────────────────
+
+    @GetMapping("/{id}/notes")
+    @PreAuthorize("hasAuthority('clinical-patient-visit-note-view') or hasRole('System Admin') or hasRole('Doctor') or hasRole('Nurse')")
+    public List<ClinicalNote> getNotes(@PathVariable Long id) {
+        return noteService.findByVisit(id);
+    }
+
+    @PostMapping("/{id}/notes")
+    @PreAuthorize("hasAuthority('doctors-notes-view') or hasRole('System Admin') or hasRole('Doctor')")
+    public ClinicalNote addNote(@PathVariable Long id, @RequestBody ClinicalNoteRequest request) {
+        return noteService.create(id, request);
+    }
+
+    @PutMapping("/{visitId}/notes/{noteId}")
+    @PreAuthorize("hasAuthority('doctors-notes-view') or hasRole('System Admin') or hasRole('Doctor')")
+    public ResponseEntity<ClinicalNote> updateNote(@PathVariable Long visitId,
+                                                    @PathVariable Long noteId,
+                                                    @RequestBody ClinicalNoteRequest request) {
+        return ResponseEntity.ok(noteService.update(noteId, request));
+    }
+
+    @PutMapping("/{visitId}/notes/{noteId}/finalize")
+    @PreAuthorize("hasAuthority('doctors-notes-view') or hasRole('System Admin') or hasRole('Doctor')")
+    public ResponseEntity<ClinicalNote> finalizeNote(@PathVariable Long visitId, @PathVariable Long noteId) {
+        return ResponseEntity.ok(noteService.finalize(noteId));
+    }
+
+    @DeleteMapping("/{visitId}/notes/{noteId}")
+    @PreAuthorize("hasRole('System Admin') or hasRole('Doctor')")
+    public ResponseEntity<Void> deleteNote(@PathVariable Long visitId, @PathVariable Long noteId) {
+        noteService.delete(noteId);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,5 +1,6 @@
 package com.mediconnect.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -38,9 +39,26 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", "Invalid username or password"));
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        String cause = ex.getMostSpecificCause().getMessage();
+        String message = resolveConstraintMessage(cause);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", message));
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, String>> handleResponseStatus(ResponseStatusException ex) {
         return ResponseEntity.status(ex.getStatusCode())
                 .body(Map.of("error", ex.getReason() != null ? ex.getReason() : ex.getMessage()));
+    }
+
+    private String resolveConstraintMessage(String cause) {
+        if (cause == null) return "A record with this value already exists.";
+        if (cause.contains("contact_number")) return "A patient with this contact number is already registered.";
+        if (cause.contains("email"))          return "This email address is already in use.";
+        if (cause.contains("mrn"))            return "A patient with this MRN already exists.";
+        if (cause.contains("user_name"))      return "A user with this username already exists.";
+        if (cause.contains("visit_code"))     return "A visit with this code already exists.";
+        return "A record with the same unique value already exists.";
     }
 }

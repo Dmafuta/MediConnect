@@ -11,8 +11,10 @@ import com.mediconnect.repository.PatientRepository;
 import com.mediconnect.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -70,6 +72,22 @@ public class AppointmentService {
 
         User provider = userRepository.findById(request.getProviderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Provider not found with id: " + request.getProviderId()));
+
+        // Conflict check — only when a specific time slot is requested
+        if (request.getAppointmentTime() != null) {
+            boolean conflict = appointmentRepository
+                    .existsByProviderIdAndAppointmentDateAndAppointmentTimeAndAppointmentStatusNotIn(
+                            request.getProviderId(),
+                            request.getAppointmentDate(),
+                            request.getAppointmentTime(),
+                            List.of("CANCELLED", "NO_SHOW"));
+            if (conflict) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Provider already has an appointment at " + request.getAppointmentDate()
+                        + " " + request.getAppointmentTime() + ". Please choose a different time slot.");
+            }
+        }
+
         appointment.setProvider(provider);
         appointment.setAppointmentDate(request.getAppointmentDate());
         appointment.setAppointmentTime(request.getAppointmentTime());

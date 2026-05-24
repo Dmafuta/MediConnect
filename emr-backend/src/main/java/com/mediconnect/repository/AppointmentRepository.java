@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Repository
@@ -21,4 +22,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByAppointmentDate(LocalDate date);
 
     List<Appointment> findByProviderIdAndAppointmentDate(Long providerId, LocalDate date);
+
+    boolean existsByProviderIdAndAppointmentDateAndAppointmentTimeAndAppointmentStatusNotIn(
+            Long providerId, LocalDate date, LocalTime time, List<String> excludedStatuses);
 }
