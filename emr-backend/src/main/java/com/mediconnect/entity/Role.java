@@ -1,5 +1,7 @@
 package com.mediconnect.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -7,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "rbac_role")
 @Getter
@@ -32,6 +35,7 @@ public class Role {
     @Column(name = "role_type")
     private String roleType;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "application_id")
     private Application application;
@@ -45,6 +49,7 @@ public class Role {
     @Column(name = "role_priority")
     private Integer rolePriority;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "default_route_id")
     private Route defaultRoute;
@@ -61,6 +66,7 @@ public class Role {
     @Column(name = "modified_on")
     private LocalDateTime modifiedOn;
 
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "rbac_map_role_permission",
             joinColumns = @JoinColumn(name = "role_id"),

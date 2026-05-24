@@ -1,6 +1,7 @@
 package com.mediconnect.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "rbac_user")
 @Getter
@@ -55,6 +57,7 @@ public class User {
     @Column(name = "needs_password_update")
     private Boolean needsPasswordUpdate;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "landing_page_route_id")
     private Route landingPageRoute;
