@@ -1,11 +1,12 @@
 package com.mediconnect.service;
 
+import com.mediconnect.repository.UserRepository;
 import com.mediconnect.util.JwtUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -13,14 +14,14 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthService {
 
     private final AuthenticationManager authenticationManager;
-    private final CustomUserDetailsService userDetailsService;
+    private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final LoginAttemptService loginAttemptService;
 
-    public AuthService(AuthenticationManager authenticationManager, CustomUserDetailsService userDetailsService,
+    public AuthService(AuthenticationManager authenticationManager, UserRepository userRepository,
                        JwtUtil jwtUtil, LoginAttemptService loginAttemptService) {
         this.authenticationManager = authenticationManager;
-        this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.loginAttemptService = loginAttemptService;
     }
@@ -37,9 +38,8 @@ public class AuthService {
             loginAttemptService.loginFailed(username);
             throw e;
         }
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        return jwtUtil.generateToken(userDetails.getUsername());
+        var user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        return jwtUtil.generateToken(username, Boolean.TRUE.equals(user.getNeedsPasswordUpdate()));
     }
-
-    // TODO: Implement password change/reset logic
 }

@@ -31,6 +31,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         this.tokenBlacklistService = tokenBlacklistService;
     }
 
+    private boolean isPasswordChangeAllowed(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+        return (path.equals("/api/auth/me") && "GET".equals(method))
+                || (path.equals("/api/auth/logout") && "POST".equals(method))
+                || (path.matches("/api/users/\\d+/password") && "PUT".equals(method));
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
@@ -59,6 +67,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
                 context.setAuthentication(authToken);
                 SecurityContextHolder.setContext(context);
+
+                if (jwtUtil.extractNeedsPasswordUpdate(token) && !isPasswordChangeAllowed(request)) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"Password change required\",\"code\":\"PASSWORD_CHANGE_REQUIRED\"}");
+                    return;
+                }
             }
         }
         filterChain.doFilter(request, response);

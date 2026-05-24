@@ -8,6 +8,9 @@ import com.mediconnect.repository.RoleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -66,6 +69,15 @@ public class RoleService {
         role.setIsActive(false);
         role.setModifiedOn(LocalDateTime.now());
         roleRepository.save(role);
+    }
+
+    @Transactional(readOnly = true)
+    public Set<Permission> getRolePermissions(Long roleId) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
+        return role.getPermissions().stream()
+                .filter(p -> Boolean.TRUE.equals(p.getIsActive()))
+                .collect(Collectors.toSet());
     }
 
     @Transactional

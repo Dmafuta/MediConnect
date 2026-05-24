@@ -50,9 +50,14 @@ public class JwtUtil {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String username, boolean needsPasswordUpdate) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("pwdChange", needsPasswordUpdate);
         return createToken(claims, username);
+    }
+
+    public boolean extractNeedsPasswordUpdate(String token) {
+        return Boolean.TRUE.equals(extractClaim(token, claims -> claims.get("pwdChange", Boolean.class)));
     }
 
     private String createToken(Map<String, Object> claims, String username) {

@@ -1,5 +1,6 @@
 package com.mediconnect.controller;
 
+import com.mediconnect.entity.Permission;
 import com.mediconnect.entity.Role;
 import com.mediconnect.service.RoleService;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/roles")
@@ -50,6 +52,12 @@ public class RoleController {
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/permissions")
+    @PreAuthorize("hasAuthority('view_role_permissions') or hasRole('System Admin')")
+    public ResponseEntity<Set<Permission>> getRolePermissions(@PathVariable Long id) {
+        return ResponseEntity.ok(roleService.getRolePermissions(id));
     }
 
     @PutMapping("/{id}/permissions")
