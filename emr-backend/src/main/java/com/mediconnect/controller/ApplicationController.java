@@ -19,13 +19,13 @@ public class ApplicationController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('view_applications') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('view_applications') or hasRole('System Admin')")
     public List<Application> getAllApplications() {
         return applicationService.findAllApplications();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('view_application_details') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('view_application_details') or hasRole('System Admin')")
     public ResponseEntity<Application> getApplicationById(@PathVariable Long id) {
         return applicationService.findApplicationById(id)
                 .map(ResponseEntity::ok)
@@ -33,19 +33,19 @@ public class ApplicationController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('create_application') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('create_application') or hasRole('System Admin')")
     public Application createApplication(@RequestBody Application application) {
         return applicationService.createApplication(application);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('update_application') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('update_application') or hasRole('System Admin')")
     public ResponseEntity<Application> updateApplication(@PathVariable Long id, @RequestBody Application applicationDetails) {
         return ResponseEntity.ok(applicationService.updateApplication(id, applicationDetails));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('delete_application') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('delete_application') or hasRole('System Admin')")
     public ResponseEntity<Void> deleteApplication(@PathVariable Long id) {
         applicationService.deleteApplication(id);
         return ResponseEntity.noContent().build();
