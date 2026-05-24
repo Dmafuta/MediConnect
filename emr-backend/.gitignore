@@ -1,0 +1,109 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Java
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+# End of Project Specific
+
+# IDEs and editors
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.metadata/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+.localized
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+
+# Specific to Spring Boot
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/.*~
+!**/src/test/**/.*~
+
+# STS
+.apt_generated
+.factorypath
+.springBeans
+
+# Eclipse
+.springdt/
+
+# Caches
+*.dbs
+*.jfm
+*.obj
+*.ilk
+*.pdb
+*.suo
+*.user
+*.userosscfg
+*.bak
+*.aps
+*.bsc
+*.ncb
+*.sbr
+*.sdf
+*.opendb
+*.VC.db
+
+# Misc
+*.pid
+*.seed
+*.token
+*.key
+*.crt
+*.pem
+*.p12
+*.jks
+*.keystore
+*.properties
+!src/main/resources/application.properties
+!src/main/resources/application-*.properties
+!src/main/resources/bootstrap.properties
+!src/main/resources/bootstrap-*.properties
+!src/main/resources/config/application.properties
+!src/main/resources/config/application-*.properties
+!src/main/resources/config/bootstrap.properties
+!src/main/resources/config/bootstrap-*.properties
