@@ -1,11 +1,14 @@
 package com.mediconnect.emergency.service;
 
+import com.mediconnect.clinical.enums.QueueStatus;
 import com.mediconnect.emergency.dto.TriageAssessmentRequest;
 import com.mediconnect.emergency.entity.TriageAssessment;
+import com.mediconnect.emergency.enums.TriageDisposition;
 import com.mediconnect.clinical.entity.Visit;
 import com.mediconnect.shared.exception.ResourceNotFoundException;
 import com.mediconnect.emergency.repository.TriageAssessmentRepository;
 import com.mediconnect.clinical.repository.VisitRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class TriageService {
 
@@ -44,14 +48,17 @@ public class TriageService {
         applyRequest(triage, request);
         triage.setTriageCompletedAt(LocalDateTime.now());
 
-        // Mark the visit as triaged and update disposition in queue
         visit.setIsTriaged(true);
         if (request.getDisposition() != null) {
-            visit.setQueueStatus(mapDispositionToQueueStatus(request.getDisposition()));
+            TriageDisposition disposition = TriageDisposition.valueOf(request.getDisposition());
+            triage.setDisposition(disposition);
+            visit.setQueueStatus(mapDispositionToQueueStatus(disposition));
         }
         visitRepository.save(visit);
 
-        return triageRepository.save(triage);
+        TriageAssessment saved = triageRepository.save(triage);
+        log.info("Created triage assessment {} for visit {}", saved.getId(), visitId);
+        return saved;
     }
 
     @Transactional
@@ -70,15 +77,15 @@ public class TriageService {
         t.setOnsetCharacter(r.getOnsetCharacter());
         t.setGeneralAppearance(r.getGeneralAppearance());
         t.setMentalStatus(r.getMentalStatus());
-        if (r.getDisposition() != null) t.setDisposition(r.getDisposition());
+        if (r.getDisposition() != null) t.setDisposition(TriageDisposition.valueOf(r.getDisposition()));
         t.setAdditionalNotes(r.getAdditionalNotes());
     }
 
-    private String mapDispositionToQueueStatus(String disposition) {
+    private QueueStatus mapDispositionToQueueStatus(TriageDisposition disposition) {
         return switch (disposition) {
-            case "TREATMENT_ROOM", "OBSERVATION", "ICU" -> "WITH_PROVIDER";
-            case "DISCHARGE_HOME", "TRANSFER_OUT"       -> "DONE";
-            default                                      -> "WAITING";
+            case TREATMENT_ROOM, OBSERVATION, ICU -> QueueStatus.WITH_PROVIDER;
+            case DISCHARGE_HOME, TRANSFER_OUT     -> QueueStatus.DONE;
+            default                               -> QueueStatus.WAITING;
         };
     }
 }

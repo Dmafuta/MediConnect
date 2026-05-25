@@ -2,7 +2,12 @@ package com.mediconnect.clinical.service;
 
 import com.mediconnect.clinical.dto.VisitRequest;
 import com.mediconnect.clinical.dto.VisitStatusRequest;
+import com.mediconnect.clinical.enums.BillingStatus;
+import com.mediconnect.clinical.enums.QueueStatus;
+import com.mediconnect.clinical.enums.VisitStatus;
+import com.mediconnect.clinical.enums.VisitType;
 import com.mediconnect.appointment.entity.Appointment;
+import com.mediconnect.appointment.enums.AppointmentStatus;
 import com.mediconnect.patient.entity.Patient;
 import com.mediconnect.security.entity.User;
 import com.mediconnect.clinical.entity.Visit;
@@ -11,6 +16,7 @@ import com.mediconnect.appointment.repository.AppointmentRepository;
 import com.mediconnect.patient.repository.PatientRepository;
 import com.mediconnect.security.repository.UserRepository;
 import com.mediconnect.clinical.repository.VisitRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,6 +27,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class VisitService {
 
@@ -50,7 +57,8 @@ public class VisitService {
     }
 
     public List<Visit> findTodaysQueue() {
-        return visitRepository.findByVisitDateAndVisitStatus(LocalDate.now(), "QUEUED");
+        return visitRepository.findByVisitDateAndVisitStatusIn(
+                LocalDate.now(), List.of(VisitStatus.QUEUED, VisitStatus.IN_PROGRESS));
     }
 
     @Transactional
@@ -67,17 +75,16 @@ public class VisitService {
         visit.setVisitDate(request.getVisitDate());
         visit.setVisitTime(request.getVisitTime() != null ? request.getVisitTime() : LocalTime.now());
         visit.setDepartmentName(request.getDepartmentName());
-        visit.setVisitType(request.getVisitType() != null ? request.getVisitType() : "OPD");
-        visit.setVisitStatus("QUEUED");
-        visit.setQueueStatus("WAITING");
-        visit.setBillingStatus("PENDING");
+        visit.setVisitType(request.getVisitType() != null ? VisitType.valueOf(request.getVisitType()) : VisitType.OPD);
+        visit.setVisitStatus(VisitStatus.QUEUED);
+        visit.setQueueStatus(QueueStatus.WAITING);
+        visit.setBillingStatus(BillingStatus.PENDING);
 
         if (request.getAppointmentId() != null) {
             Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + request.getAppointmentId()));
             visit.setAppointment(appointment);
-            // Mark appointment as arrived
-            appointment.setAppointmentStatus("ARRIVED");
+            appointment.setAppointmentStatus(AppointmentStatus.ARRIVED);
             appointmentRepository.save(appointment);
         }
 
@@ -90,25 +97,29 @@ public class VisitService {
 
         visit = visitRepository.save(visit);
         visit.setVisitCode("V-" + String.format("%06d", visit.getId()));
-        return visitRepository.save(visit);
+        visit = visitRepository.save(visit);
+        log.info("Created visit {} for patient {}", visit.getVisitCode(), patient.getId());
+        return visit;
     }
 
     @Transactional
     public Visit updateStatus(Long id, VisitStatusRequest request) {
         Visit visit = visitRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Visit not found with id: " + id));
-        visit.setVisitStatus(request.getVisitStatus());
-        if (request.getQueueStatus() != null) visit.setQueueStatus(request.getQueueStatus());
-        if (request.getBillingStatus() != null) visit.setBillingStatus(request.getBillingStatus());
+        visit.setVisitStatus(VisitStatus.valueOf(request.getVisitStatus()));
+        if (request.getQueueStatus() != null) visit.setQueueStatus(QueueStatus.valueOf(request.getQueueStatus()));
+        if (request.getBillingStatus() != null) visit.setBillingStatus(BillingStatus.valueOf(request.getBillingStatus()));
         if (request.getIsTriaged() != null) visit.setIsTriaged(request.getIsTriaged());
+        log.info("Updated visit {} status to {}", id, request.getVisitStatus());
         return visitRepository.save(visit);
     }
 
     @Transactional
     public void delete(Long id) {
-        if (!visitRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Visit not found with id: " + id);
-        }
-        visitRepository.deleteById(id);
+        Visit visit = visitRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Visit not found with id: " + id));
+        visit.setVisitStatus(VisitStatus.CANCELLED);
+        visitRepository.save(visit);
+        log.info("Soft-deleted (cancelled) visit {}", id);
     }
 }

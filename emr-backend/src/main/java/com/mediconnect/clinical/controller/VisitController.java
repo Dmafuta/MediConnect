@@ -42,35 +42,36 @@ public class VisitController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('appointment-listvisit-view') or hasRole('System Admin')")
-    public Page<Visit> getAllVisits(@PageableDefault(size = 15) Pageable pageable) {
-        return visitService.findAll(pageable);
+    public Page<VisitResponse> getAllVisits(@PageableDefault(size = 15) Pageable pageable) {
+        return visitService.findAll(pageable).map(VisitResponse::from);
     }
 
     @GetMapping("/queue/today")
     @PreAuthorize("hasAuthority('appointment-listvisit-view') or hasRole('System Admin') or hasRole('Doctor') or hasRole('Nurse')")
-    public List<Visit> getTodaysQueue() {
-        return visitService.findTodaysQueue();
+    public List<VisitResponse> getTodaysQueue() {
+        return visitService.findTodaysQueue().stream().map(VisitResponse::from).toList();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('appointment-listvisit-view') or hasRole('System Admin')")
-    public ResponseEntity<Visit> getVisitById(@PathVariable Long id) {
+    public ResponseEntity<VisitResponse> getVisitById(@PathVariable Long id) {
         return visitService.findById(id)
+                .map(VisitResponse::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('appointment-visit-view') or hasRole('System Admin') or hasRole('Receptionist')")
-    public Visit createVisit(@Valid @RequestBody VisitRequest request) {
-        return visitService.create(request);
+    public VisitResponse createVisit(@Valid @RequestBody VisitRequest request) {
+        return VisitResponse.from(visitService.create(request));
     }
 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAuthority('appointment-visit-view') or hasRole('System Admin') or hasRole('Doctor') or hasRole('Nurse')")
-    public ResponseEntity<Visit> updateStatus(@PathVariable Long id,
+    public ResponseEntity<VisitResponse> updateStatus(@PathVariable Long id,
                                                @Valid @RequestBody VisitStatusRequest request) {
-        return ResponseEntity.ok(visitService.updateStatus(id, request));
+        return ResponseEntity.ok(VisitResponse.from(visitService.updateStatus(id, request)));
     }
 
     @DeleteMapping("/{id}")

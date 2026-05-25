@@ -1,7 +1,10 @@
 package com.mediconnect.radiology.service;
 
 import com.mediconnect.radiology.dto.ImagingOrderRequest;
+import com.mediconnect.radiology.enums.ImagingOrderStatus;
+import com.mediconnect.radiology.enums.StudyType;
 import com.mediconnect.shared.dto.OrderStatusRequest;
+import com.mediconnect.shared.enums.OrderPriority;
 import com.mediconnect.radiology.entity.ImagingOrder;
 import com.mediconnect.security.entity.User;
 import com.mediconnect.clinical.entity.Visit;
@@ -9,6 +12,7 @@ import com.mediconnect.shared.exception.ResourceNotFoundException;
 import com.mediconnect.radiology.repository.ImagingOrderRepository;
 import com.mediconnect.security.repository.UserRepository;
 import com.mediconnect.clinical.repository.VisitRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -18,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class ImagingOrderService {
 
@@ -58,21 +63,23 @@ public class ImagingOrderService {
         order.setVisit(visit);
         order.setPatient(visit.getPatient());
         order.setOrderedBy(orderedBy);
-        order.setStudyType(request.getStudyType());
+        order.setStudyType(StudyType.valueOf(request.getStudyType()));
         order.setBodyPart(request.getBodyPart());
-        order.setPriority(request.getPriority() != null ? request.getPriority() : "ROUTINE");
+        order.setPriority(request.getPriority() != null ? OrderPriority.valueOf(request.getPriority()) : OrderPriority.ROUTINE);
         order.setClinicalIndication(request.getClinicalIndication());
         order.setNotes(request.getNotes());
-        order.setStatus("ORDERED");
+        order.setStatus(ImagingOrderStatus.ORDERED);
 
-        return imagingOrderRepository.save(order);
+        ImagingOrder saved = imagingOrderRepository.save(order);
+        log.info("Created imaging order {} for visit {}", saved.getId(), visitId);
+        return saved;
     }
 
     @Transactional
     public ImagingOrder updateStatus(Long id, OrderStatusRequest request) {
         ImagingOrder order = imagingOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Imaging order not found with id: " + id));
-        order.setStatus(request.getStatus());
+        order.setStatus(ImagingOrderStatus.valueOf(request.getStatus()));
         if (request.getNotes() != null) order.setNotes(request.getNotes());
         return imagingOrderRepository.save(order);
     }
@@ -83,7 +90,8 @@ public class ImagingOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Imaging order not found with id: " + id));
         order.setReport(report);
         order.setReportDate(LocalDateTime.now());
-        order.setStatus("REPORTED");
+        order.setStatus(ImagingOrderStatus.REPORTED);
+        log.info("Recorded report for imaging order {}", id);
         return imagingOrderRepository.save(order);
     }
 
@@ -91,7 +99,7 @@ public class ImagingOrderService {
     public void delete(Long id) {
         ImagingOrder order = imagingOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Imaging order not found with id: " + id));
-        order.setStatus("CANCELLED");
+        order.setStatus(ImagingOrderStatus.CANCELLED);
         imagingOrderRepository.save(order);
     }
 }

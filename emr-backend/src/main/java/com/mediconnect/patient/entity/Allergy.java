@@ -1,6 +1,8 @@
 package com.mediconnect.patient.entity;
 
 import com.mediconnect.shared.entity.AuditBase;
+import com.mediconnect.patient.enums.AllergyType;
+import com.mediconnect.patient.enums.AllergySeverity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,13 +29,13 @@ public class Allergy extends AuditBase {
     @Column(name = "allergen_name", nullable = false)
     private String allergenName;
 
-    // DRUG, FOOD, ENVIRONMENTAL, OTHER
+    @Enumerated(EnumType.STRING)
     @Column(name = "allergy_type")
-    private String allergyType;
+    private AllergyType allergyType;
 
-    // MILD, MODERATE, SEVERE, LIFE_THREATENING
+    @Enumerated(EnumType.STRING)
     @Column(name = "severity")
-    private String severity;
+    private AllergySeverity severity;
 
     @Column(name = "verified")
     private Boolean verified = false;

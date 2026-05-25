@@ -3,15 +3,19 @@ package com.mediconnect.patient.service;
 import com.mediconnect.patient.dto.AllergyRequest;
 import com.mediconnect.patient.entity.Allergy;
 import com.mediconnect.patient.entity.Patient;
+import com.mediconnect.patient.enums.AllergyType;
+import com.mediconnect.patient.enums.AllergySeverity;
 import com.mediconnect.shared.exception.ResourceNotFoundException;
 import com.mediconnect.patient.repository.AllergyRepository;
 import com.mediconnect.patient.repository.PatientRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class AllergyService {
 
@@ -38,13 +42,15 @@ public class AllergyService {
         Allergy allergy = new Allergy();
         allergy.setPatient(patient);
         allergy.setAllergenName(request.getAllergenName());
-        allergy.setAllergyType(request.getAllergyType());
-        allergy.setSeverity(request.getSeverity());
+        if (request.getAllergyType() != null) allergy.setAllergyType(AllergyType.valueOf(request.getAllergyType()));
+        if (request.getSeverity() != null) allergy.setSeverity(AllergySeverity.valueOf(request.getSeverity()));
         allergy.setVerified(Boolean.TRUE.equals(request.getVerified()));
         allergy.setReaction(request.getReaction());
         allergy.setComments(request.getComments());
         allergy.setIsActive(true);
-        return allergyRepository.save(allergy);
+        Allergy saved = allergyRepository.save(allergy);
+        log.info("Recorded allergy {} for patient {}", saved.getId(), patientId);
+        return saved;
     }
 
     @Transactional
@@ -52,8 +58,8 @@ public class AllergyService {
         Allergy allergy = allergyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Allergy not found with id: " + id));
         allergy.setAllergenName(request.getAllergenName());
-        allergy.setAllergyType(request.getAllergyType());
-        allergy.setSeverity(request.getSeverity());
+        if (request.getAllergyType() != null) allergy.setAllergyType(AllergyType.valueOf(request.getAllergyType()));
+        if (request.getSeverity() != null) allergy.setSeverity(AllergySeverity.valueOf(request.getSeverity()));
         if (request.getVerified() != null) allergy.setVerified(request.getVerified());
         allergy.setReaction(request.getReaction());
         allergy.setComments(request.getComments());

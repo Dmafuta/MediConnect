@@ -1,6 +1,7 @@
 package com.mediconnect.nursing.entity;
 
 import com.mediconnect.shared.entity.AuditBase;
+import com.mediconnect.nursing.enums.AdministrationStatus;
 import com.mediconnect.patient.entity.Patient;
 import com.mediconnect.clinical.entity.Visit;
 import com.mediconnect.security.entity.User;
@@ -55,9 +56,9 @@ public class MedicationAdministration extends AuditBase {
     @Column(name = "administered_at", nullable = false)
     private LocalDateTime administeredAt;
 
-    // ADMINISTERED, HELD, REFUSED, MISSED
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status = "ADMINISTERED";
+    private AdministrationStatus status = AdministrationStatus.ADMINISTERED;
 
     @Column(name = "hold_reason")
     private String holdReason;

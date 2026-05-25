@@ -2,6 +2,7 @@ package com.mediconnect.nursing.service;
 
 import com.mediconnect.nursing.dto.MedicationAdministrationRequest;
 import com.mediconnect.nursing.entity.MedicationAdministration;
+import com.mediconnect.nursing.enums.AdministrationStatus;
 import com.mediconnect.pharmacy.entity.MedicationPrescription;
 import com.mediconnect.security.entity.User;
 import com.mediconnect.clinical.entity.Visit;
@@ -10,6 +11,7 @@ import com.mediconnect.nursing.repository.MedicationAdministrationRepository;
 import com.mediconnect.pharmacy.repository.MedicationPrescriptionRepository;
 import com.mediconnect.security.repository.UserRepository;
 import com.mediconnect.clinical.repository.VisitRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class MedicationAdministrationService {
 
@@ -65,7 +68,9 @@ public class MedicationAdministrationService {
         admin.setDose(request.getDose());
         admin.setRoute(request.getRoute());
         admin.setAdministeredAt(request.getAdministeredAt());
-        admin.setStatus(request.getStatus() != null ? request.getStatus() : "ADMINISTERED");
+        admin.setStatus(request.getStatus() != null
+                ? AdministrationStatus.valueOf(request.getStatus())
+                : AdministrationStatus.ADMINISTERED);
         admin.setHoldReason(request.getHoldReason());
         admin.setNotes(request.getNotes());
 
@@ -73,13 +78,14 @@ public class MedicationAdministrationService {
             MedicationPrescription prescription = prescriptionRepository.findById(request.getPrescriptionId())
                     .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + request.getPrescriptionId()));
             admin.setPrescription(prescription);
-            // Pre-fill medication name from prescription if not overridden
             if (admin.getMedicationName() == null || admin.getMedicationName().isBlank()) {
                 admin.setMedicationName(prescription.getMedicationName());
             }
         }
 
-        return marRepository.save(admin);
+        MedicationAdministration saved = marRepository.save(admin);
+        log.info("Recorded medication administration {} for visit {}", saved.getId(), visitId);
+        return saved;
     }
 
     @Transactional

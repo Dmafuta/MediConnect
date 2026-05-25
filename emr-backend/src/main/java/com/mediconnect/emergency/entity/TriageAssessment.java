@@ -1,6 +1,7 @@
 package com.mediconnect.emergency.entity;
 
 import com.mediconnect.shared.entity.AuditBase;
+import com.mediconnect.emergency.enums.TriageDisposition;
 import com.mediconnect.clinical.entity.Visit;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -53,9 +54,9 @@ public class TriageAssessment extends AuditBase {
     @Column(name = "mental_status")
     private String mentalStatus;
 
-    // WAITING_ROOM, TREATMENT_ROOM, OBSERVATION, ICU, TRANSFER_OUT, DISCHARGE_HOME
+    @Enumerated(EnumType.STRING)
     @Column(name = "disposition")
-    private String disposition = "WAITING_ROOM";
+    private TriageDisposition disposition = TriageDisposition.WAITING_ROOM;
 
     @Column(name = "triage_completed_at")
     private LocalDateTime triageCompletedAt;

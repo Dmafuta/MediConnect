@@ -1,6 +1,7 @@
 package com.mediconnect.clinical.entity;
 
 import com.mediconnect.shared.entity.AuditBase;
+import com.mediconnect.clinical.enums.NoteType;
 import com.mediconnect.security.entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -31,9 +32,9 @@ public class ClinicalNote extends AuditBase {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
-    // SOAP, PROGRESS, DISCHARGE, REFERRAL, OTHER
+    @Enumerated(EnumType.STRING)
     @Column(name = "note_type", nullable = false)
-    private String noteType = "SOAP";
+    private NoteType noteType = NoteType.SOAP;
 
     // SOAP fields — used when noteType = SOAP
     @Column(name = "subjective", columnDefinition = "TEXT")

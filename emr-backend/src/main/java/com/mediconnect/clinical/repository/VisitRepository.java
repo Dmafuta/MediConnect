@@ -1,6 +1,7 @@
 package com.mediconnect.clinical.repository;
 
 import com.mediconnect.clinical.entity.Visit;
+import com.mediconnect.clinical.enums.VisitStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,7 +24,8 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
 
     List<Visit> findByProviderIdAndVisitDate(Long providerId, LocalDate date);
 
-    List<Visit> findByVisitDateAndVisitStatus(LocalDate date, String visitStatus);
+    List<Visit> findByVisitDateAndVisitStatusIn(LocalDate date, List<VisitStatus> statuses);
+
     long countByVisitDate(LocalDate date);
 
     @Query("SELECT v.visitDate, COUNT(v) FROM Visit v WHERE v.visitDate BETWEEN :from AND :to GROUP BY v.visitDate ORDER BY v.visitDate ASC")

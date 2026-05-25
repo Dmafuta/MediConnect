@@ -1,8 +1,8 @@
 package com.mediconnect.appointment.controller;
 
 import com.mediconnect.appointment.dto.AppointmentRequest;
+import com.mediconnect.appointment.dto.AppointmentResponse;
 import com.mediconnect.appointment.dto.AppointmentStatusRequest;
-import com.mediconnect.appointment.entity.Appointment;
 import com.mediconnect.appointment.service.AppointmentService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -28,44 +28,45 @@ public class AppointmentController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('appointment-listappointment-view') or hasRole('System Admin')")
-    public Page<Appointment> getAllAppointments(@PageableDefault(size = 15) Pageable pageable) {
-        return appointmentService.findAll(pageable);
+    public Page<AppointmentResponse> getAllAppointments(@PageableDefault(size = 15) Pageable pageable) {
+        return appointmentService.findAll(pageable).map(AppointmentResponse::from);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('appointment-view') or hasRole('System Admin')")
-    public ResponseEntity<Appointment> getAppointmentById(@PathVariable Long id) {
+    public ResponseEntity<AppointmentResponse> getAppointmentById(@PathVariable Long id) {
         return appointmentService.findById(id)
+                .map(AppointmentResponse::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/by-date")
     @PreAuthorize("hasAuthority('appointment-listappointment-view') or hasRole('System Admin')")
-    public List<Appointment> getByDate(
+    public List<AppointmentResponse> getByDate(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return appointmentService.findByDate(date);
+        return appointmentService.findByDate(date).stream().map(AppointmentResponse::from).toList();
     }
 
     @GetMapping("/by-provider")
     @PreAuthorize("hasAuthority('appointment-listappointment-view') or hasRole('System Admin')")
-    public List<Appointment> getByProvider(
+    public List<AppointmentResponse> getByProvider(
             @RequestParam Long providerId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return appointmentService.findByProviderAndDate(providerId, date);
+        return appointmentService.findByProviderAndDate(providerId, date).stream().map(AppointmentResponse::from).toList();
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('appointment-createappointment-view') or hasRole('System Admin') or hasRole('Receptionist')")
-    public Appointment createAppointment(@Valid @RequestBody AppointmentRequest request) {
-        return appointmentService.create(request);
+    public AppointmentResponse createAppointment(@Valid @RequestBody AppointmentRequest request) {
+        return AppointmentResponse.from(appointmentService.create(request));
     }
 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAuthority('appointment-visit-view') or hasRole('System Admin') or hasRole('Receptionist')")
-    public ResponseEntity<Appointment> updateStatus(@PathVariable Long id,
+    public ResponseEntity<AppointmentResponse> updateStatus(@PathVariable Long id,
                                                      @Valid @RequestBody AppointmentStatusRequest request) {
-        return ResponseEntity.ok(appointmentService.updateStatus(id, request));
+        return ResponseEntity.ok(AppointmentResponse.from(appointmentService.updateStatus(id, request)));
     }
 
     @DeleteMapping("/{id}")

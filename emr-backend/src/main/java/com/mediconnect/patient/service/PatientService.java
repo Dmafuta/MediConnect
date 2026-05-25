@@ -5,6 +5,7 @@ import com.mediconnect.patient.dto.PatientUpdateRequest;
 import com.mediconnect.patient.entity.Patient;
 import com.mediconnect.shared.exception.ResourceNotFoundException;
 import com.mediconnect.patient.repository.PatientRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class PatientService {
 
@@ -45,7 +47,9 @@ public class PatientService {
         patient = patientRepository.save(patient);
         // Generate MRN after we have the DB-assigned ID
         patient.setMrn("MC-" + String.format("%06d", patient.getId()));
-        return patientRepository.save(patient);
+        patient = patientRepository.save(patient);
+        log.info("Created patient {} with MRN {}", patient.getId(), patient.getMrn());
+        return patient;
     }
 
     @Transactional

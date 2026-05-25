@@ -1,10 +1,9 @@
 package com.mediconnect.appointment.entity;
 
 import com.mediconnect.shared.entity.AuditBase;
+import com.mediconnect.appointment.enums.AppointmentStatus;
 import com.mediconnect.patient.entity.Patient;
 import com.mediconnect.security.entity.User;
-import com.mediconnect.clinical.entity.Visit;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,7 +20,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
-@ToString(exclude = {"patient", "provider", "visit"})
+@ToString(exclude = {"patient", "provider"})
 public class Appointment extends AuditBase {
 
     @Id
@@ -64,9 +63,9 @@ public class Appointment extends AuditBase {
     @Column(name = "appointment_type")
     private String appointmentType;
 
-    // BOOKED, ARRIVED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW
+    @Enumerated(EnumType.STRING)
     @Column(name = "appointment_status", nullable = false)
-    private String appointmentStatus = "BOOKED";
+    private AppointmentStatus appointmentStatus = AppointmentStatus.BOOKED;
 
     @Column(name = "reason", columnDefinition = "TEXT")
     private String reason;
@@ -79,8 +78,4 @@ public class Appointment extends AuditBase {
 
     @Column(name = "cancelled_remarks", columnDefinition = "TEXT")
     private String cancelledRemarks;
-
-    @JsonIgnore
-    @OneToOne(mappedBy = "appointment", fetch = FetchType.LAZY)
-    private Visit visit;
 }

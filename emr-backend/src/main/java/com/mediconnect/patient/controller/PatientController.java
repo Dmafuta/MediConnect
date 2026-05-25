@@ -1,36 +1,13 @@
 package com.mediconnect.patient.controller;
 
-import com.mediconnect.shared.dto.*;
-import com.mediconnect.security.dto.*;
 import com.mediconnect.patient.dto.*;
-import com.mediconnect.appointment.dto.*;
-import com.mediconnect.clinical.dto.*;
-import com.mediconnect.emergency.dto.*;
-import com.mediconnect.lab.dto.*;
-import com.mediconnect.radiology.dto.*;
-import com.mediconnect.pharmacy.dto.*;
-import com.mediconnect.nursing.dto.*;
-import com.mediconnect.reporting.dto.*;
-import com.mediconnect.shared.entity.*;
-import com.mediconnect.security.entity.*;
-import com.mediconnect.patient.entity.*;
-import com.mediconnect.appointment.entity.*;
-import com.mediconnect.clinical.entity.*;
-import com.mediconnect.emergency.entity.*;
-import com.mediconnect.lab.entity.*;
-import com.mediconnect.radiology.entity.*;
-import com.mediconnect.pharmacy.entity.*;
-import com.mediconnect.nursing.entity.*;
-import com.mediconnect.security.service.*;
+import com.mediconnect.clinical.dto.VisitResponse;
+import com.mediconnect.patient.entity.Allergy;
+import com.mediconnect.patient.entity.PatientProblem;
+import com.mediconnect.pharmacy.entity.MedicationPrescription;
 import com.mediconnect.patient.service.*;
-import com.mediconnect.appointment.service.*;
-import com.mediconnect.clinical.service.*;
-import com.mediconnect.emergency.service.*;
-import com.mediconnect.lab.service.*;
-import com.mediconnect.radiology.service.*;
-import com.mediconnect.pharmacy.service.*;
-import com.mediconnect.nursing.service.*;
-import com.mediconnect.reporting.service.*;
+import com.mediconnect.clinical.service.VisitService;
+import com.mediconnect.pharmacy.service.MedicationPrescriptionService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -66,36 +43,37 @@ public class PatientController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('patient-view') or hasRole('System Admin')")
-    public Page<Patient> getAllPatients(@PageableDefault(size = 15) Pageable pageable) {
-        return patientService.findAllPatients(pageable);
+    public Page<PatientResponse> getAllPatients(@PageableDefault(size = 15) Pageable pageable) {
+        return patientService.findAllPatients(pageable).map(PatientResponse::from);
     }
 
     @GetMapping("/search")
     @PreAuthorize("hasAuthority('patient-searchpatient-view') or hasRole('System Admin')")
-    public Page<Patient> searchPatients(@RequestParam String q,
+    public Page<PatientResponse> searchPatients(@RequestParam String q,
                                          @PageableDefault(size = 15) Pageable pageable) {
-        return patientService.searchPatients(q, pageable);
+        return patientService.searchPatients(q, pageable).map(PatientResponse::from);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('patient-view') or hasRole('System Admin')")
-    public ResponseEntity<Patient> getPatientById(@PathVariable Long id) {
+    public ResponseEntity<PatientResponse> getPatientById(@PathVariable Long id) {
         return patientService.findPatientById(id)
+                .map(PatientResponse::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('patient-register-view') or hasRole('System Admin')")
-    public Patient createPatient(@Valid @RequestBody PatientCreateRequest request) {
-        return patientService.createPatient(request);
+    public PatientResponse createPatient(@Valid @RequestBody PatientCreateRequest request) {
+        return PatientResponse.from(patientService.createPatient(request));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('patient-register-view') or hasRole('System Admin')")
-    public ResponseEntity<Patient> updatePatient(@PathVariable Long id,
+    public ResponseEntity<PatientResponse> updatePatient(@PathVariable Long id,
                                                   @Valid @RequestBody PatientUpdateRequest request) {
-        return ResponseEntity.ok(patientService.updatePatient(id, request));
+        return ResponseEntity.ok(PatientResponse.from(patientService.updatePatient(id, request)));
     }
 
     @DeleteMapping("/{id}")
@@ -176,7 +154,7 @@ public class PatientController {
 
     @GetMapping("/{id}/visits")
     @PreAuthorize("hasAuthority('patient-view') or hasRole('System Admin') or hasRole('Doctor') or hasRole('Nurse')")
-    public List<Visit> getVisits(@PathVariable Long id) {
-        return visitService.findByPatient(id);
+    public List<VisitResponse> getVisits(@PathVariable Long id) {
+        return visitService.findByPatient(id).stream().map(VisitResponse::from).toList();
     }
 }

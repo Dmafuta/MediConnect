@@ -3,12 +3,14 @@ package com.mediconnect.appointment.service;
 import com.mediconnect.appointment.dto.AppointmentRequest;
 import com.mediconnect.appointment.dto.AppointmentStatusRequest;
 import com.mediconnect.appointment.entity.Appointment;
+import com.mediconnect.appointment.enums.AppointmentStatus;
 import com.mediconnect.patient.entity.Patient;
 import com.mediconnect.security.entity.User;
 import com.mediconnect.shared.exception.ResourceNotFoundException;
 import com.mediconnect.appointment.repository.AppointmentRepository;
 import com.mediconnect.patient.repository.PatientRepository;
 import com.mediconnect.security.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class AppointmentService {
 
@@ -73,14 +76,13 @@ public class AppointmentService {
         User provider = userRepository.findById(request.getProviderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Provider not found with id: " + request.getProviderId()));
 
-        // Conflict check — only when a specific time slot is requested
         if (request.getAppointmentTime() != null) {
             boolean conflict = appointmentRepository
                     .existsByProviderIdAndAppointmentDateAndAppointmentTimeAndAppointmentStatusNotIn(
                             request.getProviderId(),
                             request.getAppointmentDate(),
                             request.getAppointmentTime(),
-                            List.of("CANCELLED", "NO_SHOW"));
+                            List.of(AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW));
             if (conflict) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "Provider already has an appointment at " + request.getAppointmentDate()
@@ -94,21 +96,25 @@ public class AppointmentService {
         appointment.setDepartmentName(request.getDepartmentName());
         appointment.setAppointmentType(request.getAppointmentType());
         appointment.setReason(request.getReason());
-        appointment.setAppointmentStatus("BOOKED");
+        appointment.setAppointmentStatus(AppointmentStatus.BOOKED);
 
-        return appointmentRepository.save(appointment);
+        Appointment saved = appointmentRepository.save(appointment);
+        log.info("Created appointment {} for provider {} on {}", saved.getId(), provider.getId(), request.getAppointmentDate());
+        return saved;
     }
 
     @Transactional
     public Appointment updateStatus(Long id, AppointmentStatusRequest request) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
-        appointment.setAppointmentStatus(request.getStatus());
-        if ("CANCELLED".equals(request.getStatus())) {
+        AppointmentStatus newStatus = AppointmentStatus.valueOf(request.getStatus());
+        appointment.setAppointmentStatus(newStatus);
+        if (newStatus == AppointmentStatus.CANCELLED) {
             appointment.setCancelledRemarks(request.getCancelledRemarks());
             appointment.setCancelledOn(request.getCancelledOn());
             appointment.setCancelledBy(request.getCancelledBy());
         }
+        log.info("Updated appointment {} status to {}", id, newStatus);
         return appointmentRepository.save(appointment);
     }
 

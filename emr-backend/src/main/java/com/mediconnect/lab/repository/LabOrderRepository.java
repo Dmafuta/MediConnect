@@ -1,6 +1,7 @@
 package com.mediconnect.lab.repository;
 
 import com.mediconnect.lab.entity.LabOrder;
+import com.mediconnect.lab.enums.LabOrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,8 +14,8 @@ import java.util.List;
 public interface LabOrderRepository extends JpaRepository<LabOrder, Long> {
     List<LabOrder> findByVisitId(Long visitId);
     List<LabOrder> findByPatientId(Long patientId);
-    List<LabOrder> findByStatus(String status);
-    long countByStatus(String status);
+    List<LabOrder> findByStatus(LabOrderStatus status);
+    long countByStatus(LabOrderStatus status);
 
     @Query("SELECT l.status, COUNT(l) FROM LabOrder l WHERE CAST(l.createdOn AS date) BETWEEN :from AND :to GROUP BY l.status")
     List<Object[]> countByStatusInRange(@Param("from") LocalDate from, @Param("to") LocalDate to);

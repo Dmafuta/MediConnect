@@ -2,12 +2,14 @@ package com.mediconnect.clinical.service;
 
 import com.mediconnect.clinical.dto.ClinicalNoteRequest;
 import com.mediconnect.clinical.entity.ClinicalNote;
+import com.mediconnect.clinical.enums.NoteType;
 import com.mediconnect.security.entity.User;
 import com.mediconnect.clinical.entity.Visit;
 import com.mediconnect.shared.exception.ResourceNotFoundException;
 import com.mediconnect.clinical.repository.ClinicalNoteRepository;
 import com.mediconnect.security.repository.UserRepository;
 import com.mediconnect.clinical.repository.VisitRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class ClinicalNoteService {
 
@@ -54,7 +57,7 @@ public class ClinicalNoteService {
         ClinicalNote note = new ClinicalNote();
         note.setVisit(visit);
         note.setAuthor(author);
-        note.setNoteType(request.getNoteType() != null ? request.getNoteType() : "SOAP");
+        note.setNoteType(request.getNoteType() != null ? NoteType.valueOf(request.getNoteType()) : NoteType.SOAP);
         note.setSubjective(request.getSubjective());
         note.setObjective(request.getObjective());
         note.setAssessment(request.getAssessment());
@@ -62,7 +65,9 @@ public class ClinicalNoteService {
         note.setNoteContent(request.getNoteContent());
         note.setIsFinalized(false);
 
-        return noteRepository.save(note);
+        ClinicalNote saved = noteRepository.save(note);
+        log.info("Created clinical note {} for visit {}", saved.getId(), visitId);
+        return saved;
     }
 
     @Transactional
@@ -80,7 +85,7 @@ public class ClinicalNoteService {
         note.setAssessment(request.getAssessment());
         note.setPlan(request.getPlan());
         note.setNoteContent(request.getNoteContent());
-        if (request.getNoteType() != null) note.setNoteType(request.getNoteType());
+        if (request.getNoteType() != null) note.setNoteType(NoteType.valueOf(request.getNoteType()));
 
         return noteRepository.save(note);
     }
@@ -97,7 +102,9 @@ public class ClinicalNoteService {
 
         note.setIsFinalized(true);
         note.setFinalizedOn(LocalDateTime.now());
-        return noteRepository.save(note);
+        ClinicalNote finalized = noteRepository.save(note);
+        log.info("Finalized clinical note {}", id);
+        return finalized;
     }
 
     @Transactional

@@ -1,6 +1,7 @@
 package com.mediconnect.patient.entity;
 
 import com.mediconnect.shared.entity.AuditBase;
+import com.mediconnect.patient.enums.ProblemStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,9 +30,9 @@ public class PatientProblem extends AuditBase {
     @Column(name = "problem_description", nullable = false, columnDefinition = "TEXT")
     private String problemDescription;
 
-    // ACTIVE, CHRONIC, RESOLVED
+    @Enumerated(EnumType.STRING)
     @Column(name = "current_status")
-    private String currentStatus = "ACTIVE";
+    private ProblemStatus currentStatus = ProblemStatus.ACTIVE;
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;

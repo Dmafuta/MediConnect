@@ -3,15 +3,18 @@ package com.mediconnect.patient.service;
 import com.mediconnect.patient.dto.PatientProblemRequest;
 import com.mediconnect.patient.entity.Patient;
 import com.mediconnect.patient.entity.PatientProblem;
+import com.mediconnect.patient.enums.ProblemStatus;
 import com.mediconnect.shared.exception.ResourceNotFoundException;
 import com.mediconnect.patient.repository.PatientProblemRepository;
 import com.mediconnect.patient.repository.PatientRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class PatientProblemService {
 
@@ -64,7 +67,7 @@ public class PatientProblemService {
 
     private void applyRequest(PatientProblem p, PatientProblemRequest r) {
         p.setProblemDescription(r.getProblemDescription());
-        if (r.getCurrentStatus() != null) p.setCurrentStatus(r.getCurrentStatus());
+        if (r.getCurrentStatus() != null) p.setCurrentStatus(ProblemStatus.valueOf(r.getCurrentStatus()));
         p.setNote(r.getNote());
         p.setOnsetDate(r.getOnsetDate());
         p.setResolvedDate(r.getResolvedDate());

@@ -1,6 +1,8 @@
 package com.mediconnect.clinical.entity;
 
 import com.mediconnect.shared.entity.AuditBase;
+import com.mediconnect.clinical.enums.ReferralStatus;
+import com.mediconnect.shared.enums.OrderPriority;
 import com.mediconnect.patient.entity.Patient;
 import com.mediconnect.security.entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -40,13 +42,13 @@ public class ReferralOrder extends AuditBase {
     @Column(name = "referred_to_provider")
     private String referredToProvider;
 
-    // ROUTINE, URGENT
+    @Enumerated(EnumType.STRING)
     @Column(name = "priority", nullable = false)
-    private String priority = "ROUTINE";
+    private OrderPriority priority = OrderPriority.ROUTINE;
 
-    // PENDING, ACKNOWLEDGED, ACCEPTED, COMPLETED, CANCELLED
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status = "PENDING";
+    private ReferralStatus status = ReferralStatus.PENDING;
 
     @Column(name = "reason_for_referral", columnDefinition = "TEXT")
     private String reasonForReferral;

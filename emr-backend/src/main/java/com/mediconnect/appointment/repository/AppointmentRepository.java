@@ -1,6 +1,7 @@
 package com.mediconnect.appointment.repository;
 
 import com.mediconnect.appointment.entity.Appointment;
+import com.mediconnect.appointment.enums.AppointmentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,7 +27,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByProviderIdAndAppointmentDate(Long providerId, LocalDate date);
 
     boolean existsByProviderIdAndAppointmentDateAndAppointmentTimeAndAppointmentStatusNotIn(
-            Long providerId, LocalDate date, LocalTime time, List<String> excludedStatuses);
+            Long providerId, LocalDate date, LocalTime time, List<AppointmentStatus> excludedStatuses);
 
     long countByAppointmentDate(LocalDate date);
 

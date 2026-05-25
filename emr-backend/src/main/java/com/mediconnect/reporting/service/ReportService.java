@@ -1,6 +1,9 @@
 package com.mediconnect.reporting.service;
 
 import com.mediconnect.reporting.dto.DashboardMetrics;
+import com.mediconnect.lab.enums.LabOrderStatus;
+import com.mediconnect.radiology.enums.ImagingOrderStatus;
+import com.mediconnect.clinical.enums.ReferralStatus;
 import com.mediconnect.security.repository.*;
 import com.mediconnect.patient.repository.*;
 import com.mediconnect.appointment.repository.*;
@@ -51,9 +54,9 @@ public class ReportService {
         return DashboardMetrics.builder()
                 .todayVisits(visitRepository.countByVisitDate(today))
                 .todayAppointments(appointmentRepository.countByAppointmentDate(today))
-                .pendingLabOrders(labOrderRepository.countByStatus("ORDERED"))
-                .pendingImagingOrders(imagingOrderRepository.countByStatus("ORDERED"))
-                .pendingReferrals(referralOrderRepository.countByStatus("PENDING"))
+                .pendingLabOrders(labOrderRepository.countByStatus(LabOrderStatus.ORDERED))
+                .pendingImagingOrders(imagingOrderRepository.countByStatus(ImagingOrderStatus.ORDERED))
+                .pendingReferrals(referralOrderRepository.countByStatus(ReferralStatus.PENDING))
                 .totalActivePatients(patientRepository.countByIsActiveTrue())
                 .build();
     }

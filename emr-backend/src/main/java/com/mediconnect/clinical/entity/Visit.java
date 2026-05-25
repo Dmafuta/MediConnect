@@ -1,6 +1,10 @@
 package com.mediconnect.clinical.entity;
 
 import com.mediconnect.shared.entity.AuditBase;
+import com.mediconnect.clinical.enums.BillingStatus;
+import com.mediconnect.clinical.enums.QueueStatus;
+import com.mediconnect.clinical.enums.VisitStatus;
+import com.mediconnect.clinical.enums.VisitType;
 import com.mediconnect.patient.entity.Patient;
 import com.mediconnect.appointment.entity.Appointment;
 import com.mediconnect.security.entity.User;
@@ -55,21 +59,21 @@ public class Visit extends AuditBase {
     @Column(name = "department_name")
     private String departmentName;
 
-    // OPD, IPD, EMERGENCY
+    @Enumerated(EnumType.STRING)
     @Column(name = "visit_type")
-    private String visitType;
+    private VisitType visitType;
 
-    // QUEUED, IN_PROGRESS, COMPLETED, CANCELLED
+    @Enumerated(EnumType.STRING)
     @Column(name = "visit_status", nullable = false)
-    private String visitStatus = "QUEUED";
+    private VisitStatus visitStatus = VisitStatus.QUEUED;
 
-    // WAITING, WITH_PROVIDER, DONE
+    @Enumerated(EnumType.STRING)
     @Column(name = "queue_status")
-    private String queueStatus = "WAITING";
+    private QueueStatus queueStatus = QueueStatus.WAITING;
 
-    // PENDING, BILLED, PAID
+    @Enumerated(EnumType.STRING)
     @Column(name = "billing_status")
-    private String billingStatus = "PENDING";
+    private BillingStatus billingStatus = BillingStatus.PENDING;
 
     @Column(name = "is_triaged")
     private Boolean isTriaged = false;

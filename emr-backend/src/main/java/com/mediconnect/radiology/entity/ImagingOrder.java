@@ -1,6 +1,9 @@
 package com.mediconnect.radiology.entity;
 
 import com.mediconnect.shared.entity.AuditBase;
+import com.mediconnect.radiology.enums.ImagingOrderStatus;
+import com.mediconnect.radiology.enums.StudyType;
+import com.mediconnect.shared.enums.OrderPriority;
 import com.mediconnect.patient.entity.Patient;
 import com.mediconnect.clinical.entity.Visit;
 import com.mediconnect.security.entity.User;
@@ -37,20 +40,20 @@ public class ImagingOrder extends AuditBase {
     @JoinColumn(name = "ordered_by_id", nullable = false)
     private User orderedBy;
 
-    // X_RAY, CT, MRI, ULTRASOUND, PET_CT, NUCLEAR, FLUOROSCOPY, OTHER
+    @Enumerated(EnumType.STRING)
     @Column(name = "study_type", nullable = false)
-    private String studyType;
+    private StudyType studyType;
 
     @Column(name = "body_part")
     private String bodyPart;
 
-    // ROUTINE, URGENT, STAT
+    @Enumerated(EnumType.STRING)
     @Column(name = "priority", nullable = false)
-    private String priority = "ROUTINE";
+    private OrderPriority priority = OrderPriority.ROUTINE;
 
-    // ORDERED, SCHEDULED, IN_PROGRESS, COMPLETED, REPORTED, CANCELLED
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status = "ORDERED";
+    private ImagingOrderStatus status = ImagingOrderStatus.ORDERED;
 
     @Column(name = "clinical_indication", columnDefinition = "TEXT")
     private String clinicalIndication;

@@ -3,12 +3,15 @@ package com.mediconnect.clinical.service;
 import com.mediconnect.shared.dto.OrderStatusRequest;
 import com.mediconnect.clinical.dto.ReferralOrderRequest;
 import com.mediconnect.clinical.entity.ReferralOrder;
+import com.mediconnect.clinical.enums.ReferralStatus;
+import com.mediconnect.shared.enums.OrderPriority;
 import com.mediconnect.security.entity.User;
 import com.mediconnect.clinical.entity.Visit;
 import com.mediconnect.shared.exception.ResourceNotFoundException;
 import com.mediconnect.clinical.repository.ReferralOrderRepository;
 import com.mediconnect.security.repository.UserRepository;
 import com.mediconnect.clinical.repository.VisitRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class ReferralOrderService {
 
@@ -59,19 +63,21 @@ public class ReferralOrderService {
         order.setReferredBy(referredBy);
         order.setReferredToSpecialty(request.getReferredToSpecialty());
         order.setReferredToProvider(request.getReferredToProvider());
-        order.setPriority(request.getPriority() != null ? request.getPriority() : "ROUTINE");
+        order.setPriority(request.getPriority() != null ? OrderPriority.valueOf(request.getPriority()) : OrderPriority.ROUTINE);
         order.setReasonForReferral(request.getReasonForReferral());
         order.setNotes(request.getNotes());
-        order.setStatus("PENDING");
+        order.setStatus(ReferralStatus.PENDING);
 
-        return referralOrderRepository.save(order);
+        ReferralOrder saved = referralOrderRepository.save(order);
+        log.info("Created referral order {} for visit {}", saved.getId(), visitId);
+        return saved;
     }
 
     @Transactional
     public ReferralOrder updateStatus(Long id, OrderStatusRequest request) {
         ReferralOrder order = referralOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Referral order not found with id: " + id));
-        order.setStatus(request.getStatus());
+        order.setStatus(ReferralStatus.valueOf(request.getStatus()));
         if (request.getNotes() != null) order.setNotes(request.getNotes());
         return referralOrderRepository.save(order);
     }
@@ -80,7 +86,7 @@ public class ReferralOrderService {
     public void delete(Long id) {
         ReferralOrder order = referralOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Referral order not found with id: " + id));
-        order.setStatus("CANCELLED");
+        order.setStatus(ReferralStatus.CANCELLED);
         referralOrderRepository.save(order);
     }
 }

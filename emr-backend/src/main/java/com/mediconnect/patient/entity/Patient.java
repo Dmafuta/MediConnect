@@ -1,9 +1,6 @@
 package com.mediconnect.patient.entity;
 
 import com.mediconnect.shared.entity.AuditBase;
-import com.mediconnect.appointment.entity.Appointment;
-import com.mediconnect.clinical.entity.Visit;
-import com.mediconnect.pharmacy.entity.MedicationPrescription;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -21,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
-@ToString(exclude = {"allergies", "appointments", "visits", "problems", "prescriptions"})
+@ToString(exclude = {"allergies", "problems"})
 public class Patient extends AuditBase {
 
     @Id
@@ -87,16 +84,4 @@ public class Patient extends AuditBase {
     @JsonIgnore
     @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<PatientProblem> problems = new ArrayList<>();
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<MedicationPrescription> prescriptions = new ArrayList<>();
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Appointment> appointments = new ArrayList<>();
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Visit> visits = new ArrayList<>();
 }

@@ -2,7 +2,9 @@ package com.mediconnect.lab.service;
 
 import com.mediconnect.lab.dto.LabOrderRequest;
 import com.mediconnect.lab.dto.LabResultRequest;
+import com.mediconnect.lab.enums.LabOrderStatus;
 import com.mediconnect.shared.dto.OrderStatusRequest;
+import com.mediconnect.shared.enums.OrderPriority;
 import com.mediconnect.lab.entity.LabOrder;
 import com.mediconnect.security.entity.User;
 import com.mediconnect.clinical.entity.Visit;
@@ -10,6 +12,7 @@ import com.mediconnect.shared.exception.ResourceNotFoundException;
 import com.mediconnect.lab.repository.LabOrderRepository;
 import com.mediconnect.security.repository.UserRepository;
 import com.mediconnect.clinical.repository.VisitRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class LabOrderService {
 
@@ -42,7 +46,7 @@ public class LabOrderService {
         return labOrderRepository.findByPatientId(patientId);
     }
 
-    public List<LabOrder> findByStatus(String status) {
+    public List<LabOrder> findByStatus(LabOrderStatus status) {
         return labOrderRepository.findByStatus(status);
     }
 
@@ -65,19 +69,21 @@ public class LabOrderService {
         order.setOrderedBy(orderedBy);
         order.setTestName(request.getTestName());
         order.setTestCode(request.getTestCode());
-        order.setPriority(request.getPriority() != null ? request.getPriority() : "ROUTINE");
+        order.setPriority(request.getPriority() != null ? OrderPriority.valueOf(request.getPriority()) : OrderPriority.ROUTINE);
         order.setClinicalIndication(request.getClinicalIndication());
         order.setNotes(request.getNotes());
-        order.setStatus("ORDERED");
+        order.setStatus(LabOrderStatus.ORDERED);
 
-        return labOrderRepository.save(order);
+        LabOrder saved = labOrderRepository.save(order);
+        log.info("Created lab order {} for visit {}", saved.getId(), visitId);
+        return saved;
     }
 
     @Transactional
     public LabOrder updateStatus(Long id, OrderStatusRequest request) {
         LabOrder order = labOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lab order not found with id: " + id));
-        order.setStatus(request.getStatus());
+        order.setStatus(LabOrderStatus.valueOf(request.getStatus()));
         if (request.getNotes() != null) order.setNotes(request.getNotes());
         return labOrderRepository.save(order);
     }
@@ -91,7 +97,8 @@ public class LabOrderService {
         order.setResultRange(request.getResultRange());
         order.setResultInterpretation(request.getResultInterpretation());
         order.setResultDate(request.getResultDate() != null ? request.getResultDate() : LocalDateTime.now());
-        order.setStatus("RESULTED");
+        order.setStatus(LabOrderStatus.RESULTED);
+        log.info("Recorded result for lab order {}", id);
         return labOrderRepository.save(order);
     }
 
@@ -99,7 +106,7 @@ public class LabOrderService {
     public void delete(Long id) {
         LabOrder order = labOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lab order not found with id: " + id));
-        order.setStatus("CANCELLED");
+        order.setStatus(LabOrderStatus.CANCELLED);
         labOrderRepository.save(order);
     }
 }

@@ -13,6 +13,7 @@ import com.mediconnect.pharmacy.repository.MedicationPrescriptionRepository;
 import com.mediconnect.patient.repository.PatientRepository;
 import com.mediconnect.security.repository.UserRepository;
 import com.mediconnect.clinical.repository.VisitRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class MedicationPrescriptionService {
 
@@ -85,9 +87,13 @@ public class MedicationPrescriptionService {
         }
 
         MedicationPrescription saved = prescriptionRepository.save(prescription);
+        log.info("Created prescription {} for patient {}", saved.getId(), patient.getId());
 
         // Drug-allergy interaction check — soft alert, does not block save
         List<String> alerts = checkDrugAllergyInteractions(patient, request.getMedicationName());
+        if (!alerts.isEmpty()) {
+            log.warn("Drug-allergy alerts for prescription {}: {}", saved.getId(), alerts);
+        }
 
         return new PrescriptionCreateResponse(saved, alerts);
     }
@@ -110,8 +116,10 @@ public class MedicationPrescriptionService {
             String allergenLower = allergy.getAllergenName().toLowerCase();
 
             if (medLower.contains(allergenLower) || allergenLower.contains(medLower)) {
-                String severity = allergy.getSeverity() != null ? " [" + allergy.getSeverity() + "]" : "";
-                alerts.add("ALLERGY ALERT: Patient has a documented " + allergy.getAllergyType()
+                // Substring match — cast wide net; clinical review is still required
+                String severity = allergy.getSeverity() != null ? " [" + allergy.getSeverity().name() + "]" : "";
+                String type = allergy.getAllergyType() != null ? allergy.getAllergyType().name() : "UNKNOWN";
+                alerts.add("ALLERGY ALERT: Patient has a documented " + type
                         + " allergy to " + allergy.getAllergenName() + severity
                         + ". Verify before dispensing.");
             }
