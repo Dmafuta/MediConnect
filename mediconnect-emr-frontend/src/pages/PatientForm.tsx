@@ -10,6 +10,7 @@ import {
   InputLabel,
   FormControl,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -55,9 +56,14 @@ const PatientForm: React.FC = () => {
     }
   }, [id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setPatient((prev) => ({ ...prev, [name as string]: value }));
+    setPatient((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent) => {
+    const { name, value } = e.target;
+    setPatient((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleDateChange = (date: dayjs.Dayjs | null) => {
@@ -85,7 +91,7 @@ const PatientForm: React.FC = () => {
 
   if (loading && id && !patient.firstName) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
         <CircularProgress />
       </Box>
     );
@@ -120,7 +126,8 @@ const PatientForm: React.FC = () => {
           label="Date of Birth"
           value={dayjs(patient.dateOfBirth)}
           onChange={handleDateChange}
-          renderInput={(params) => <TextField {...params} fullWidth margin="normal" required />}
+          slots={{ textField: TextField }}
+          slotProps={{ textField: { fullWidth: true, margin: 'normal', required: true } }}
         />
         <FormControl fullWidth margin="normal" required>
           <InputLabel>Gender</InputLabel>
@@ -128,7 +135,7 @@ const PatientForm: React.FC = () => {
             name="gender"
             value={patient.gender}
             label="Gender"
-            onChange={handleChange}
+            onChange={handleSelectChange}
           >
             <MenuItem value="Male">Male</MenuItem>
             <MenuItem value="Female">Female</MenuItem>
